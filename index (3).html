@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Cultuur in Arnhem — Interactieve Kaart & Rad</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+  body { font-family: Arial; margin:0; }
+  #map { height: 500px; }
+</style>
+</head>
+<body>
+<h1>Cultuur Arnhem</h1>
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const places=[
+  {name:"Openlucht Museum", address:"Hoeferlaan 4, Arnhem", website:"https://openluchtmuseum.nl", coords:[52.011,5.902]},
+  {name:"Museum Arnhem", address:"Utrechtseweg 87, Arnhem", website:"https://museumarnhem.nl", coords:[51.985,5.914]},
+  {name:"Eusebiuskerk", address:"Koningstraat 25, Arnhem", website:"https://eusebius.nl", coords:[51.980,5.911]},
+  {name:"Musis Arnhem", address:"Mussenstraat 1, Arnhem", website:"https://musisenstadstheater.nl", coords:[51.981,5.910]}
+];
+
+const map=L.map('map').setView([51.985,5.91],13);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);
+
+places.forEach(p=>{
+  L.marker(p.coords).addTo(map).bindPopup(
+    "<b>"+p.name+"</b><br>"+p.address+"<br><a href='"+p.website+"' target='_blank'>Website</a>"
+  );
+});
+</script>
+</body>
+</html>
