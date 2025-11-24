@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Cultuur in Arnhem — Interactieve Kaart & Draairad</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+body{margin:0;font-family:Arial;background:#f5f7fb;color:#0b2545}
+header{background:#0b63d6;color:white;padding:20px;font-size:20px;font-weight:700}
+#map{height:500px;margin:20px;border-radius:10px}
+.container{display:flex;gap:20px;margin:20px}
+.card{background:white;padding:15px;border-radius:10px;box-shadow:0 4px 10px rgba(0,0,0,0.1)}
+#wheelCanvas{width:420px;height:420px}
+.legend{margin:20px}
+.legend-item{margin-bottom:10px}
+</style>
+</head>
+<body>
+<header>Cultuur Arnhem — Interactieve Kaart & Draairad</header>
+
+<div class="container">
+  <div style="flex:1">
+    <div id="map"></div>
+
+    <div class="legend card">
+      <h3>Legenda — Alle locaties</h3>
+      <div id="legendList"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Draairad</h3>
+    <canvas id="wheelCanvas" width="420" height="420"></canvas>
+    <button id="spinBtn">Draai</button>
+    <div id="spinResult" style="margin-top:10px;font-weight:bold"></div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const places = [
+  {name:"Openlucht Museum", addr:"Hoeferlaan 4, Arnhem", site:"https://openluchtmuseum.nl", info:"Groot historisch museum in de buitenlucht.", coords:[52.011,5.902]},
+  {name:"Museum Arnhem", addr:"Utrechtseweg 87, Arnhem", site:"https://museumarnhem.nl", info:"Kunstmuseum met moderne en hedendaagse kunst.", coords:[51.985,5.914]},
+  {name:"Eusebiuskerk", addr:"Kerkplein 1, Arnhem", site:"https://eusebius.nl", info:"Historische kerk met panoramalift.", coords:[51.980,5.911]},
+  {name:"Musis Arnhem", addr:"Musschenhof 2, Arnhem", site:"https://musisenstadstheater.nl", info:"Concertzaal en theater.", coords:[51.981,5.910]},
+  {name:"Focus Filmtheater", addr:"Audrey Hepburnplein 1, Arnhem", site:"https://focusarnhem.nl", info:"Filmhuis met nieuwe en arthouse films.", coords:[51.9813,5.912]},
+  {name:"Stadstheater Arnhem", addr:"Willemsplein 1, Arnhem", site:"https://musisenstadstheater.nl", info:"Theater met grote zalen en voorstellingen.", coords:[51.9818,5.914]},
+  {name:"Rozet Arnhem", addr:"Kortestraat 16, Arnhem", site:"https://rozet.nl", info:"Cultureel centrum en bibliotheek.", coords:[51.9816,5.908]},
+  {name:"Airborne Museum", addr:"Utrechtseweg 232, Oosterbeek", site:"https://airbornemuseum.nl", info:"Museum over Slag om Arnhem.", coords:[51.9859,5.838]}
+];
+
+// MAP
+const map = L.map('map').setView([51.985,5.91], 13);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);
+
+places.forEach(p=>{
+  L.marker(p.coords).addTo(map).bindPopup(
+    "<b>"+p.name+"</b><br>"+p.addr+"<br><a href='"+p.site+"' target='_blank'>Website</a>"
+  );
+});
+
+// LEGEND
+document.getElementById("legendList").innerHTML =
+  places.map(p=>`<div class='legend-item'><b>${p.name}</b><br>${p.addr}<br><a href="${p.site}" target="_blank">${p.site}</a><br>${p.info}</div>`).join("");
+
+// WHEEL
+const canvas=document.getElementById('wheelCanvas'), ctx=canvas.getContext('2d');
+const W=420,H=420,CX=W/2,CY=H/2,R=200,N=places.length;
+let rotation=0, spinning=false;
+const colors=Array.from({length:N},(_,i)=>`hsl(${(i*137)%360} 70% 50%)`);
+
+function drawWheel(rot=0){
+  ctx.clearRect(0,0,W,H);
+  for(let i=0;i<N;i++){
+    const a1=(i/N)*2*Math.PI+rot, a2=((i+1)/N)*2*Math.PI+rot;
+    ctx.beginPath(); ctx.moveTo(CX,CY); ctx.arc(CX,CY,R,a1,a2); ctx.fillStyle=colors[i]; ctx.fill();
+    const mid=(a1+a2)/2;
+    ctx.save(); ctx.translate(CX,CY); ctx.rotate(mid);
+    ctx.textAlign='center'; ctx.font='14px Arial'; ctx.fillStyle='white';
+    ctx.rotate(Math.PI/2);
+    ctx.fillText(places[i].name,0,R*0.65);
+    ctx.restore();
+  }
+}
+drawWheel();
+
+document.getElementById("spinBtn").onclick=()=>{
+  if(spinning) return; spinning=true;
+  let vel=0.35;
+  const decel=0.992;
+  const timer=setInterval(()=>{
+    rotation+=vel; vel*=decel; drawWheel(rotation);
+    if(vel<0.003){
+      clearInterval(timer); spinning=false;
+      let idx = Math.floor(((rotation%(2*Math.PI))/(2*Math.PI))*N);
+      if(idx<0) idx+=N;
+      const p=places[idx];
+      document.getElementById("spinResult").innerHTML =
+        "<b>"+p.name+"</b><br>"+p.addr+"<br><a href='"+p.site+"' target='_blank'>"+p.site+"</a>";
+    }
+  },16);
+};
+</script>
+
+</body>
+</html>
